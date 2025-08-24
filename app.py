@@ -9,17 +9,19 @@ app = FastAPI(title="Contact Form API (Async Emails)")
 # Allow frontend domain(s)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace "*" with your frontend URL in production
+    allow_origins=["https://travel-n-tour-frontend.onrender.com"], # frontend url
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Gmail SMTP settings
 SMTP_EMAIL = "sarfof06@gmail.com"
 SMTP_PASSWORD = "mhtehnhylovnlplj"
 TO_EMAILS = ["bentjun25@gmail.com", "goddey1989@gmail.com"]
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
+
 
 async def send_email_async(subject: str, body: str, to: list[str]):
     """Send email asynchronously using aiosmtplib."""
@@ -36,18 +38,19 @@ async def send_email_async(subject: str, body: str, to: list[str]):
             port=SMTP_PORT,
             start_tls=True,
             username=SMTP_EMAIL,
-            password=SMTP_PASSWORD
+            password=SMTP_PASSWORD,
         )
     except Exception as e:
-        print("Email sending failed:", e)
+        print("❌ Email sending failed:", e)
         raise
+
 
 @app.post("/send-contact")
 async def send_contact(
     name: str = Form(...),
     email: EmailStr = Form(...),
     phone: str = Form(...),
-    message: str = Form(...)
+    message: str = Form(...),
 ):
     try:
         # Email to admin
@@ -72,11 +75,12 @@ Thank you for reaching out to BentJun Hub! We have received your message and one
 Best regards,
 BentJun Hub Team
 """
-        # Send emails
+
+        # Send both emails
         await send_email_async(admin_subject, admin_body, TO_EMAILS)
         await send_email_async(client_subject, client_body, [email])
 
-        return {"status": "success", "message": "Contact form sent and acknowledgment email delivered."}
+        return {"status": "success", "message": "Emails sent successfully."}
 
     except Exception as e:
         return {"status": "error", "message": str(e)}
