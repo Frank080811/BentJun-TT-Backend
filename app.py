@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import EmailStr
 from email.message import EmailMessage
 import aiosmtplib
 
-app = FastAPI(title="Contact Form API (Async Emails)")
+app = FastAPI(title="Travel & Tour API (Async Emails)")
 
 # Allow frontend domain(s)
 app.add_middleware(
@@ -17,26 +17,40 @@ app.add_middleware(
 
 # Gmail SMTP settings
 SMTP_EMAIL = "sarfof06@gmail.com"
-SMTP_PASSWORD = "hdexevxgafwyvcwb"  # ✅ Correct App Password
+SMTP_PASSWORD = "hdexevxgafwyvcwb"  # ✅ App Password
 TO_EMAILS = ["bentjun25@gmail.com", "goddey1989@gmail.com"]
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
-async def send_email_async(subject: str, body: str, to: list[str]):
-    """Send email asynchronously using aiosmtplib."""
+async def send_email_async(subject: str, body: str, to: list[str], attachments: list[UploadFile] = None):
+    """Send email asynchronously using aiosmtplib (with optional attachments)."""
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = SMTP_EMAIL
     msg["To"] = ", ".join(to)
     msg.set_content(body)
 
+    # Attach files if provided
+    if attachments:
+        for file in attachments:
+            try:
+                content = await file.read()
+                msg.add_attachment(
+                    content,
+                    maintype="application",
+                    subtype="octet-stream",
+                    filename=file.filename
+                )
+            except Exception as e:
+                print(f"⚠️ Failed to attach {file.filename}: {e}")
+
     try:
         response = await aiosmtplib.send(
             msg,
             hostname=SMTP_HOST,
             port=SMTP_PORT,
-            start_tls=True,  # Gmail requires STARTTLS on port 587
+            start_tls=True,
             username=SMTP_EMAIL,
             password=SMTP_PASSWORD,
         )
@@ -52,8 +66,7 @@ async def send_email_async(subject: str, body: str, to: list[str]):
 
 @app.get("/")
 async def root():
-    """Root endpoint to confirm API is running"""
-    return {"status": "success", "message": "Contact API is live and running."}
+    return {"status": "success", "message": "Travel & Tour API is live and running."}
 
 
 @app.post("/send-contact")
@@ -63,7 +76,7 @@ async def send_contact(
     phone: str = Form(...),
     message: str = Form(...),
 ):
-    # Email to admin
+    # Admin email
     admin_subject = f"New Contact Form Submission from {name}"
     admin_body = f"""
 You have a new contact form submission:
@@ -76,26 +89,71 @@ Message:
 {message}
 """
 
-    # Email to client
+    # Client email
     client_subject = "Thank you for contacting BentJun Hub"
     client_body = f"""
 Hi {name},
 
-Thank you for reaching out to BentJun Travel & Tour! We have received your message and one of our team members will contact you via phone at {phone} shortly.
+Thank you for reaching out to BentJun Travel & Tour! 
+We have received your message and one of our team members will contact you via phone at {phone} shortly.
 
-Best regards,
+Best regards,  
 BentJun Hub Team
 """
 
-    # Send both emails asynchronously
     admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS)
     client_status = await send_email_async(client_subject, client_body, [email])
 
-    # Respond to frontend
     if admin_status is True and client_status is True:
         return {"status": "success", "message": "✅ Emails sent successfully."}
     else:
-        return {
-            "status": "error",
-            "message": f"Admin email: {admin_status}, Client email: {client_status}",
-        }
+        return {"status": "error", "message": f"Admin: {admin_status}, Client: {client_status}"}
+
+
+@app.post("/send-application")
+async def send_application(
+    full_name: str = Form(...),
+    email: EmailStr = Form(...),
+    phone: str = Form(...),
+    category: str = Form(...),  # e.g., Tourist Visa, Student Visa
+    passport_number: str = Form(...),
+    nationality: str = Form(...),
+    attachments: list[UploadFile] = File([]),  # multiple docs
+):
+    # Admin email
+    admin_subject = f"New VISA Application from {full_name}"
+    admin_body = f"""
+A new VISA application has been received:
+
+Full Name: {full_name}
+Email: {email}
+Phone: {phone}
+Category: {category}
+Passport No: {passport_number}
+Nationality: {nationality}
+
+Attached documents: {", ".join([f.filename for f in attachments]) if attachments else "None"}
+"""
+
+    # Client acknowledgment email
+    client_subject = "Your VISA Application Has Been Received"
+    client_body = f"""
+Hi {full_name},
+
+Thank you for submitting your VISA application with BentJun Travel & Tour. 
+We have received your details and attached documents. Our team will review your application and get back to you soon.
+
+Best regards,  
+BentJun Hub Team
+"""
+
+    # Send admin email with attachments
+    admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS, attachments)
+
+    # Send client acknowledgment
+    client_status = await send_email_async(client_subject, client_body, [email])
+
+    if admin_status is True and client_status is True:
+        return {"status": "success", "message": "✅ Application and acknowledgment emails sent."}
+    else:
+        return {"status": "error", "message": f"Admin: {admin_status}, Client: {client_status}"}
