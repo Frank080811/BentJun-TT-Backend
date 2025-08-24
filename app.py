@@ -9,7 +9,7 @@ app = FastAPI(title="Contact Form API (Async Emails)")
 # Allow frontend domain(s)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://travel-n-tour-frontend.onrender.com"],  # frontend url
+    allow_origins=["https://travel-n-tour-frontend.onrender.com"],  # frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -17,7 +17,7 @@ app.add_middleware(
 
 # Gmail SMTP settings
 SMTP_EMAIL = "sarfof06@gmail.com"
-SMTP_PASSWORD = "hdex evxg afwy vcwb"  # ✅ App Password
+SMTP_PASSWORD = "hdexevxgafwyvcwb"  # ✅ Correct App Password
 TO_EMAILS = ["bentjun25@gmail.com", "goddey1989@gmail.com"]
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
@@ -40,10 +40,13 @@ async def send_email_async(subject: str, body: str, to: list[str]):
             username=SMTP_EMAIL,
             password=SMTP_PASSWORD,
         )
-        print("✅ Email sent:", response)  # log success
+        print(f"✅ Email sent to {to}: {response}")
         return True
+    except aiosmtplib.errors.SMTPAuthenticationError:
+        print("❌ SMTP Authentication failed. Check your App Password.")
+        return "SMTP Authentication failed"
     except Exception as e:
-        print("❌ Email sending failed:", e)  # log failure
+        print(f"❌ Email sending failed to {to}: {e}")
         return str(e)
 
 
@@ -54,7 +57,7 @@ async def send_contact(
     phone: str = Form(...),
     message: str = Form(...),
 ):
-    # Prepare emails
+    # Email to admin
     admin_subject = f"New Contact Form Submission from {name}"
     admin_body = f"""
 You have a new contact form submission:
@@ -67,6 +70,7 @@ Message:
 {message}
 """
 
+    # Email to client
     client_subject = "Thank you for contacting BentJun Hub"
     client_body = f"""
 Hi {name},
@@ -77,7 +81,7 @@ Best regards,
 BentJun Hub Team
 """
 
-    # Send emails
+    # Send both emails asynchronously
     admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS)
     client_status = await send_email_async(client_subject, client_body, [email])
 
