@@ -16,8 +16,8 @@ app.add_middleware(
 )
 
 # Gmail SMTP settings
-SMTP_EMAIL = "sarfof06@gmail.com"
-SMTP_PASSWORD = "hdexevxgafwyvcwb"  # ✅ App Password
+SMTP_EMAIL = "bentjuntravelandtour@gmail.com"
+SMTP_PASSWORD = "tiqjkvmocgqldrjr"  # ✅ App Password
 TO_EMAILS = ["bentjun25@gmail.com", "goddey1989@gmail.com"]
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
