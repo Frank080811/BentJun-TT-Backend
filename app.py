@@ -112,33 +112,34 @@ BentJun Hub Team
 
 @app.post("/send-application")
 async def send_application(
-    full_name: str = Form(...),
+    fullName: str = Form(...),
     email: EmailStr = Form(...),
     phone: str = Form(...),
-    category: str = Form(...),  # e.g., Tourist Visa, Student Visa
-    passport_number: str = Form(...),
-    nationality: str = Form(...),
-    attachments: list[UploadFile] = File([]),  # multiple docs
+    destination: str = Form(...),
+    travelDate: str = Form(...),
+    returnDate: str = Form(None),
+    passport: UploadFile = File(...),
+    photo: UploadFile = File(...)
 ):
     # Admin email
-    admin_subject = f"New VISA Application from {full_name}"
+    admin_subject = f"New VISA Application from {fullName}"
     admin_body = f"""
 A new VISA application has been received:
 
-Full Name: {full_name}
+Full Name: {fullName}
 Email: {email}
 Phone: {phone}
-Category: {category}
-Passport No: {passport_number}
-Nationality: {nationality}
+Destination: {destination}
+Travel Date: {travelDate}
+Return Date: {returnDate if returnDate else 'N/A'}
 
-Attached documents: {", ".join([f.filename for f in attachments]) if attachments else "None"}
+Attached documents: {passport.filename}, {photo.filename}
 """
 
     # Client acknowledgment email
     client_subject = "Your VISA Application Has Been Received"
     client_body = f"""
-Hi {full_name},
+Hi {fullName},
 
 Thank you for submitting your VISA application with BentJun Travel & Tour. 
 We have received your details and attached documents. Our team will review your application and get back to you soon.
