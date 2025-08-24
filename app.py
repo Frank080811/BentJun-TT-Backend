@@ -148,10 +148,8 @@ Best regards,
 BentJun Hub Team
 """
 
-    # Send admin email with attachments
-    admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS, attachments)
-
-    # Send client acknowledgment
+    # Send emails
+    admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS, [passport, photo])
     client_status = await send_email_async(client_subject, client_body, [email])
 
     if admin_status is True and client_status is True:
