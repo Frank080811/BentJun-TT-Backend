@@ -81,7 +81,7 @@ Message:
     client_body = f"""
 Hi {name},
 
-Thank you for reaching out to BentJun Hub! We have received your message and one of our team members will contact you via phone at {phone} shortly.
+Thank you for reaching out to BentJun Travel & Tour! We have received your message and one of our team members will contact you via phone at {phone} shortly.
 
 Best regards,
 BentJun Hub Team
