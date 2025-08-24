@@ -50,6 +50,12 @@ async def send_email_async(subject: str, body: str, to: list[str]):
         return str(e)
 
 
+@app.get("/")
+async def root():
+    """Root endpoint to confirm API is running"""
+    return {"status": "success", "message": "Contact API is live and running."}
+
+
 @app.post("/send-contact")
 async def send_contact(
     name: str = Form(...),
