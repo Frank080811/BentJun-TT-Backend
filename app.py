@@ -74,16 +74,18 @@ async def send_contact(
     name: str = Form(...),
     email: EmailStr = Form(...),
     phone: str = Form(...),
+    inquiry: str = Form(...),
     message: str = Form(...),
 ):
     # Admin email
-    admin_subject = f"New Contact Form Submission from {name}"
+    admin_subject = f"New Contact Form Submission from {name} ({inquiry})"
     admin_body = f"""
 You have a new contact form submission:
 
 Name: {name}
 Email: {email}
 Phone: {phone}
+Inquiry: {inquiry}
 
 Message:
 {message}
@@ -91,6 +93,23 @@ Message:
 
     # Client email
     client_subject = "Thank you for contacting BentJun Hub"
+    client_body = f"""
+Hi {name},
+
+Thank you for reaching out to BentJun Travel & Tour! 
+We have received your {inquiry.lower()} inquiry and one of our team members will contact you via phone at {phone} shortly.
+
+Best regards,  
+BentJun Hub Team
+"""
+
+    admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS)
+    client_status = await send_email_async(client_subject, client_body, [email])
+
+    if admin_status is True and client_status is True:
+        return {"status": "success", "message": "✅ Emails sent successfully."}
+    else:
+        return {"status": "error", "message": f"Admin: {admin_status}, Client: {client_status}"}
     client_body = f"""
 Hi {name},
 
