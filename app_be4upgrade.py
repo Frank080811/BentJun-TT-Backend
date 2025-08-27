@@ -18,11 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Gmail SMTP settings
 SMTP_EMAIL = "bentjuntravelandtour@gmail.com"
 SMTP_PASSWORD = "tiqjkvmocgqldrjr"  # ✅ App Password
-TO_EMAILS = ["info@bentjun.com"]
+TO_EMAILS = ["info@bentjun.com", "support@bentjun.com"]
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -72,7 +71,6 @@ async def send_email_async(subject: str, body: str, to: list[str], attachments: 
 async def root():
     return {"status": "success", "message": "Travel & Tour API is live and running."}
 
-
 @app.post("/send-contact")
 async def send_contact(
     name: str = Form(...),
@@ -81,7 +79,6 @@ async def send_contact(
     inquiry: str = Form(...),
     message: str = Form(...),
 ):
-    # Admin email
     admin_subject = f"New Contact Form Submission from {name} ({inquiry})"
     admin_body = f"""
 You have a new contact form submission:
@@ -95,7 +92,6 @@ Message:
 {message}
 """
 
-    # Client email
     client_subject = "Thank you for contacting BentJun Hub"
     client_body = f"""
 Hi {name},
@@ -107,31 +103,16 @@ Best regards,
 BentJun Hub Team
 """
 
-    admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS)
-    client_status = await send_email_async(client_subject, client_body, [email])
+    try:
+        admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS)
+        client_status = await send_email_async(client_subject, client_body, [email])
+    except Exception as e:
+        return {"status": "error", "message": f"Unexpected server error: {str(e)}"}
 
     if admin_status is True and client_status is True:
         return {"status": "success", "message": "✅ Emails sent successfully."}
     else:
         return {"status": "error", "message": f"Admin: {admin_status}, Client: {client_status}"}
-    client_body = f"""
-Hi {name},
-
-Thank you for reaching out to BentJun Travel & Tour! 
-We have received your message and one of our team members will contact you via phone at {phone} shortly.
-
-Best regards,  
-BentJun Hub Team
-"""
-
-    admin_status = await send_email_async(admin_subject, admin_body, TO_EMAILS)
-    client_status = await send_email_async(client_subject, client_body, [email])
-
-    if admin_status is True and client_status is True:
-        return {"status": "success", "message": "✅ Emails sent successfully."}
-    else:
-        return {"status": "error", "message": f"Admin: {admin_status}, Client: {client_status}"}
-
 
 @app.post("/send-application")
 async def send_application(
