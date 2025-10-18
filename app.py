@@ -1,3 +1,5 @@
+#app.py
+
 from fastapi import FastAPI, Form, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import EmailStr
@@ -18,15 +20,16 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://www.travelabroad.bentjun.com", 
+        "https://travelabroad.bentjun.com",    
         "http://localhost:3033",
-        "http://127.0.0.1:3033",
-        "http://172.28.64.2:3033",
-        "http://172.31.176.1:3033",
+        "http://127.0.0.1:3033"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Ensure uploads folder exists
 os.makedirs("uploads", exist_ok=True)
